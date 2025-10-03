@@ -7,8 +7,8 @@ import frc.robot.util.LoggedTalonFX.TalonFXInputs;
 public interface ElevatorIO {
     @AutoLog
     public static class ElevatorIOInputs {
-        public TalonFXInputs leftInputs;
-        public TalonFXInputs rightInputs;
+        public TalonFXInputs leftInputs = new TalonFXInputs();
+        public TalonFXInputs rightInputs = new TalonFXInputs();
 
         public boolean bottomLimit = false;
     }

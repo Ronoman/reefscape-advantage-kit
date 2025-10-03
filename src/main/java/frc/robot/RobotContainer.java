@@ -16,8 +16,6 @@ public class RobotContainer {
             SIM
         }
 
-        public static final Mode MODE = Mode.REAL;
-
         public static final int OI_BUTTONS_ID = 0;
         public static final int LEFT_JOYSTICK_ID = 1;
         public static final int RIGHT_JOYSTICK_ID = 2;
@@ -31,8 +29,8 @@ public class RobotContainer {
     private final Elevator elevator;
     private final Joystick oiButtons = new Joystick(Constants.OI_BUTTONS_ID);
 
-    public RobotContainer() {
-        switch(Constants.MODE) {
+    public RobotContainer(Constants.Mode mode) {
+        switch(mode) {
             case REAL:
                 elevator = new Elevator(new ElevatorIOTalonFX());
                 break;

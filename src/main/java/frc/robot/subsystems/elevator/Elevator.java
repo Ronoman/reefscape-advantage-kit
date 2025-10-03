@@ -101,7 +101,8 @@ public class Elevator extends SubsystemBase {
     );
     this.io.setDesiredState(new PositionVoltage(desiredState.position).withVelocity(desiredState.velocity));
 
-    // Logger.recordOutput("Elevator/profile/maxVelocity", this.profile)
+    Logger.recordOutput("Elevator/profile/maxVelocity", this.maxVelocity);
+    Logger.recordOutput("Elevator/profile/maxAcceleration", this.maxAcceleration);
     Logger.recordOutput("Elevator/desiredState/position", Rotations.of(desiredState.position));
     Logger.recordOutput("Elevator/desiredState/velocity", RotationsPerSecond.of(desiredState.velocity));
   }
@@ -115,8 +116,12 @@ public class Elevator extends SubsystemBase {
       new Constraints(maxVelocity.in(RotationsPerSecond), maxAcceleration.in(RotationsPerSecondPerSecond))
     );
 
+    // Only used to log in periodic() later.
+    this.maxVelocity = maxVelocity;
+    this.maxAcceleration = maxAcceleration;
+
     // Right motor is the leader, so it's the source of truth for current state
-    this.startState = new State(this.inputs.rightPosition.in(Rotations), this.inputs.rightVelocity.in(RotationsPerSecond));
+    this.startState = new State(this.inputs.rightInputs.position.in(Rotations), this.inputs.rightInputs.velocity.in(RotationsPerSecond));
 
     // Assume the desired end velocity is zero
     this.targetState = new State(Constants.ElevatorPositionToRotations.get(position).in(Rotations), 0.0);
@@ -124,7 +129,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public boolean isAtSetpoint() {
-    return this.inputs.rightPosition.minus(Rotations.of(this.targetState.position)).magnitude() < Constants.POSITION_TOLERANCE.magnitude() &&
-           this.inputs.rightVelocity.minus(RotationsPerSecond.of(this.targetState.velocity)).magnitude() < Constants.VELOCITY_TOLERANCE.magnitude();
+    return this.inputs.rightInputs.position.minus(Rotations.of(this.targetState.position)).magnitude() < Constants.POSITION_TOLERANCE.magnitude() &&
+           this.inputs.rightInputs.velocity.minus(RotationsPerSecond.of(this.targetState.velocity)).magnitude() < Constants.VELOCITY_TOLERANCE.magnitude();
   }
 }

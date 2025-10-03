@@ -4,6 +4,8 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Rotations;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
+import frc.robot.util.LoggedTalonFX;
+
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -42,8 +44,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     private DigitalInput bottomLimitSwitch = new DigitalInput(Constants.BOTTOM_LIMIT_ID);
 
-    private final TalonFX leftMotor = new TalonFX(Constants.LEFT_MOTOR_ID, Constants.CAN_BUS);
-    private final TalonFX rightMotor = new TalonFX(Constants.RIGHT_MOTOR_ID, Constants.CAN_BUS);
+    private final LoggedTalonFX leftMotor = new LoggedTalonFX(Constants.LEFT_MOTOR_ID, Constants.CAN_BUS);
+    private final LoggedTalonFX rightMotor = new LoggedTalonFX(Constants.RIGHT_MOTOR_ID, Constants.CAN_BUS);
 
     private final StatusSignal<Angle> leftPosition = leftMotor.getPosition();
     private final StatusSignal<Double> leftError = leftMotor.getClosedLoopError();
@@ -56,8 +58,6 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     private final StatusSignal<AngularVelocity> rightVelocity = rightMotor.getVelocity();
     private final StatusSignal<Voltage> rightVoltage  = rightMotor.getMotorVoltage();
     private final StatusSignal<Current> rightCurrent  = rightMotor.getSupplyCurrent();
-
-    private final PositionVoltage desiredState = new PositionVoltage(0).withVelocity(0);
 
     public ElevatorIOTalonFX() {
         TalonFXConfiguration leftConfig = new TalonFXConfiguration();
@@ -101,20 +101,14 @@ public class ElevatorIOTalonFX implements ElevatorIO {
             rightPosition, rightVelocity, rightVoltage, rightCurrent
         );
 
-        inputs.leftInputs.updateInputs();
-
-        inputs.rightPosition = rightPosition.getValue();
-        inputs.rightError = Rotations.of(rightError.getValue());
-        inputs.rightVelocity = rightVelocity.getValue();
-        inputs.rightVoltage = rightVoltage.getValue();
-        inputs.rightCurrent = rightCurrent.getValue();
+        leftMotor.updateInputs(inputs.leftInputs);
+        rightMotor.updateInputs(inputs.rightInputs);
 
         inputs.bottomLimit = bottomLimitSwitch.get();
     }
 
     @Override
     public void setDesiredState(PositionVoltage desiredState) {
-        this.desiredState = desiredState;
         rightMotor.setControl(desiredState.withEnableFOC(true));
     }
 }
