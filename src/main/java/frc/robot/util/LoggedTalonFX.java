@@ -27,7 +27,7 @@ public class LoggedTalonFX extends TalonFX {
     @AutoLog
     public static class TalonFXInputs {
         public Angle position = Rotations.of(0.0);
-        public Double error = 0.0;
+        public double error = 0.0;
         public AngularVelocity velocity = RotationsPerSecond.of(0.0);
         public Voltage voltage = Volts.of(0.0);
         public Current current = Amps.of(0.0);
@@ -56,7 +56,7 @@ public class LoggedTalonFX extends TalonFX {
         BaseStatusSignal.refreshAll(position, velocity, error, voltage, current);
 
         inputs.position = position.getValue();
-        inputs.error = error.getValue();
+        inputs.error = error.getValueAsDouble();
         inputs.velocity = velocity.getValue();
         inputs.voltage = voltage.getValue();
         inputs.current = current.getValue();

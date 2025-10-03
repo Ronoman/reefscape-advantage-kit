@@ -4,8 +4,6 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Rotations;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
-import frc.robot.util.LoggedTalonFX;
-
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -44,8 +42,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     private DigitalInput bottomLimitSwitch = new DigitalInput(Constants.BOTTOM_LIMIT_ID);
 
-    private final LoggedTalonFX leftMotor = new LoggedTalonFX(Constants.LEFT_MOTOR_ID, Constants.CAN_BUS);
-    private final LoggedTalonFX rightMotor = new LoggedTalonFX(Constants.RIGHT_MOTOR_ID, Constants.CAN_BUS);
+    private final TalonFX leftMotor = new TalonFX(Constants.LEFT_MOTOR_ID, Constants.CAN_BUS);
+    private final TalonFX rightMotor = new TalonFX(Constants.RIGHT_MOTOR_ID, Constants.CAN_BUS);
 
     private final StatusSignal<Angle> leftPosition = leftMotor.getPosition();
     private final StatusSignal<Double> leftError = leftMotor.getClosedLoopError();
@@ -101,8 +99,17 @@ public class ElevatorIOTalonFX implements ElevatorIO {
             rightPosition, rightVelocity, rightVoltage, rightCurrent
         );
 
-        leftMotor.updateInputs(inputs.leftInputs);
-        rightMotor.updateInputs(inputs.rightInputs);
+        inputs.leftPosition = leftPosition.getValue();
+        inputs.leftError = Rotations.of(leftError.getValue());
+        inputs.leftVelocity = leftVelocity.getValue();
+        inputs.leftVoltage = leftVoltage.getValue();
+        inputs.leftCurrent = leftCurrent.getValue();
+
+        inputs.rightPosition = rightPosition.getValue();
+        inputs.rightError = Rotations.of(rightError.getValue());
+        inputs.rightVelocity = rightVelocity.getValue();
+        inputs.rightVoltage = rightVoltage.getValue();
+        inputs.rightCurrent = rightCurrent.getValue();
 
         inputs.bottomLimit = bottomLimitSwitch.get();
     }

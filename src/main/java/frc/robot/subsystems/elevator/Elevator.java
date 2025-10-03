@@ -26,7 +26,10 @@ import java.util.Map;
 
 public class Elevator extends SubsystemBase {
   public static class Constants {
-    public static final AngularVelocity MAX_VELOCITY = RotationsPerSecond.of(60.0);
+    // public static final AngularVelocity MAX_VELOCITY = RotationsPerSecond.of(60.0);
+    // public static final AngularAcceleration MAX_ACCELERATION = RotationsPerSecondPerSecond.of(115.0);
+
+    public static final AngularVelocity MAX_VELOCITY = RotationsPerSecond.of(10.0);
     public static final AngularAcceleration MAX_ACCELERATION = RotationsPerSecondPerSecond.of(115.0);
 
     public static final Angle POSITION_TOLERANCE = Rotations.of(0.25);
@@ -121,7 +124,7 @@ public class Elevator extends SubsystemBase {
     this.maxAcceleration = maxAcceleration;
 
     // Right motor is the leader, so it's the source of truth for current state
-    this.startState = new State(this.inputs.rightInputs.position.in(Rotations), this.inputs.rightInputs.velocity.in(RotationsPerSecond));
+    this.startState = new State(this.inputs.rightPosition.in(Rotations), this.inputs.rightVelocity.in(RotationsPerSecond));
 
     // Assume the desired end velocity is zero
     this.targetState = new State(Constants.ElevatorPositionToRotations.get(position).in(Rotations), 0.0);
@@ -129,7 +132,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public boolean isAtSetpoint() {
-    return this.inputs.rightInputs.position.minus(Rotations.of(this.targetState.position)).magnitude() < Constants.POSITION_TOLERANCE.magnitude() &&
-           this.inputs.rightInputs.velocity.minus(RotationsPerSecond.of(this.targetState.velocity)).magnitude() < Constants.VELOCITY_TOLERANCE.magnitude();
+    return this.inputs.rightPosition.minus(Rotations.of(this.targetState.position)).magnitude() < Constants.POSITION_TOLERANCE.magnitude() &&
+           this.inputs.rightVelocity.minus(RotationsPerSecond.of(this.targetState.velocity)).magnitude() < Constants.VELOCITY_TOLERANCE.magnitude();
   }
 }
