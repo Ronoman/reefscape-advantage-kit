@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.elevator;
 
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.controls.PositionVoltage;
@@ -24,17 +25,28 @@ import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import java.util.EnumMap;
 import java.util.Map;
 
+/**
+ * All business logic for the Elevator subsystem. This class has a subclass for subsystem-specific constants like IDs,
+ * position enumerations, max velocities/accelerations for trapezoid profiles, and velocity/acceleration tolerances.
+ * 
+ * This subsystems owns its own TrapezoidProfile. In periodic, it will continuously sample over the TrapezoidProfile,
+ * passing the desired position and velocity along to the inputs class.
+ */
 public class Elevator extends SubsystemBase {
   public static class Constants {
+    // Actual parameters from the 2025 codebase.
     // public static final AngularVelocity MAX_VELOCITY = RotationsPerSecond.of(60.0);
     // public static final AngularAcceleration MAX_ACCELERATION = RotationsPerSecondPerSecond.of(115.0);
 
+    // The "Tim is afraid I'm going to break the robot with untested code" parameters.
     public static final AngularVelocity MAX_VELOCITY = RotationsPerSecond.of(10.0);
     public static final AngularAcceleration MAX_ACCELERATION = RotationsPerSecondPerSecond.of(115.0);
 
+    // Position and velocity tolernaces, used by isAtGoal.
     public static final Angle POSITION_TOLERANCE = Rotations.of(0.25);
     public static final AngularVelocity VELOCITY_TOLERANCE = RotationsPerSecond.of(1.0);
   
+    // Different enumerated positions that the elevator has positions for.
     public static enum ElevatorPosition {
       ALGAE_GROUND,
       ALGAE_STOW,
@@ -51,6 +63,8 @@ public class Elevator extends SubsystemBase {
       CORAL_L4,
     }
   
+    // Mappings for named positions to the number of motor rotations needed to get there, measured from the bottom
+    // resting position. These were found empirically during testing, and tweaked during competitions.
     public static final EnumMap<ElevatorPosition, Angle> ElevatorPositionToRotations = new EnumMap<>(
       Map.ofEntries(
         Map.entry(ElevatorPosition.ALGAE_GROUND, Rotations.of(3.0)),
@@ -70,13 +84,23 @@ public class Elevator extends SubsystemBase {
     );
   }
 
+  // The IO class to actually manage hardware interaction with the subsystem.
   private final ElevatorIO io;
-  // private final ElevatorIOInputs inputs = new ElevatorIOInputs();
+
+  // The AdvantageKit-generated AutoLogged input class. When used in periodic(), this will result in all input fields
+  // being logged automatically to NetworkTables (accessible by SmartDashboard, Elastic, AdvantageScope, etc).
   private final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
 
+  // The current max velocity that the TrapezoidProfile uses.
+  @AutoLogOutput
   private AngularVelocity maxVelocity = Constants.MAX_VELOCITY;
+
+  // The current max acceleration that the TrapezoidProfile uses.
+  @AutoLogOutput
   private AngularAcceleration maxAcceleration = Constants.MAX_ACCELERATION;
 
+  // The subsystem samples over this trapezoid profile with the below start and target states to determine the current
+  // desired position and velocity of the subsystem.
   private TrapezoidProfile profile = new TrapezoidProfile(
     new Constraints(
       Constants.MAX_VELOCITY.in(RotationsPerSecond),
@@ -84,19 +108,28 @@ public class Elevator extends SubsystemBase {
     )
   );
 
+  // Start and target states used by the TrapezoidProfile.
   private State startState = new State();
   private State targetState = new State();
+
+  // A Timer to keep track of the duration since the last time a goal was set on the TrapezoidProfile. This is used to
+  // sample into the TrapezoidProfile.
   private final Timer timeSinceLastGoalSet = new Timer();
 
+  // This Elevator will receive some concrete implementation of ElevatorIO. For RobotContainer.Constants.REAL, this will
+  // be an instance of ElevatorIOTalonFX.
   public Elevator(ElevatorIO io) {
     this.io = io;
   }
 
   @Override
   public void periodic() {
+    // Update our IO inputs, and log them under the Elevator/ prefix.
     io.updateInputs(inputs);
     Logger.processInputs("Elevator", inputs);
 
+    // Sample over the TrapezoidProfile, then pass the desired state off to the IO implementation for handoff to
+    // the motors.
     State desiredState = this.profile.calculate(
       this.timeSinceLastGoalSet.get(),
       this.startState,
@@ -104,12 +137,23 @@ public class Elevator extends SubsystemBase {
     );
     this.io.setDesiredState(new PositionVoltage(desiredState.position).withVelocity(desiredState.velocity));
 
+    // Record various parameters that we care about in addition to auto logged inputs.
     Logger.recordOutput("Elevator/profile/maxVelocity", this.maxVelocity);
     Logger.recordOutput("Elevator/profile/maxAcceleration", this.maxAcceleration);
     Logger.recordOutput("Elevator/desiredState/position", Rotations.of(desiredState.position));
     Logger.recordOutput("Elevator/desiredState/velocity", RotationsPerSecond.of(desiredState.velocity));
   }
 
+  /**
+   * The primary way for Commands to interact with this subsystem. They provide a named ElevatorPosition to travel to,
+   * as well as the max velocity and acceleration that should be used for the TrapezoidProfile.
+   * 
+   * @param position The position that the elevator should travel to. This is one of the enumerated pre-determined positions.
+   * @param maxVelocity The maximum velocity that the TrapezoidProfile is allowed to reach.
+   * @param maxAcceleration The maximum velocity that the TrapezoidProfile is allowed to reach.
+   * 
+   * @return Nothing, but will update the goal for the TrapezoidProfile, which is likely to induce subsystem movement.
+   */
   public void setElevatorGoal(
     Constants.ElevatorPosition position,
     AngularVelocity maxVelocity,
@@ -131,7 +175,11 @@ public class Elevator extends SubsystemBase {
     this.timeSinceLastGoalSet.reset();
   }
 
-  public boolean isAtSetpoint() {
+  /**
+   * Whether the Elevator is currently within tolerance of the most recent goal passed in to setElevatorGoal.
+   * @return True if the position and velocity are both within the Constant-specified tolerance.
+   */
+  public boolean isAtGoal() {
     return this.inputs.rightPosition.minus(Rotations.of(this.targetState.position)).magnitude() < Constants.POSITION_TOLERANCE.magnitude() &&
            this.inputs.rightVelocity.minus(RotationsPerSecond.of(this.targetState.velocity)).magnitude() < Constants.VELOCITY_TOLERANCE.magnitude();
   }
