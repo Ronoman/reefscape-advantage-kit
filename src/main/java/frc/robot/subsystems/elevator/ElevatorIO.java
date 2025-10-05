@@ -9,11 +9,15 @@ import com.ctre.phoenix6.controls.PositionVoltage;
 
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
+import frc.robot.util.TalonFXInputsAutoLogged;
 
 
 public interface ElevatorIO {
     @AutoLog
     public static class ElevatorIOInputs {
+        public TalonFXInputsAutoLogged leftInputs = new TalonFXInputsAutoLogged();
+        public TalonFXInputsAutoLogged rightInputs = new TalonFXInputsAutoLogged();
+
         public Distance height = Inches.of(0.0);
         public LinearVelocity velocity = InchesPerSecond.of(0.0);
 
