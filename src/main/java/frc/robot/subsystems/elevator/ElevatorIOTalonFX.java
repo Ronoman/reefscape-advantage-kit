@@ -1,22 +1,28 @@
 package frc.robot.subsystems.elevator;
 
 import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Rotations;
+import static frc.robot.util.CustomUnits.MetersPerRotation;
+import static frc.robot.util.CustomUnits.MetersPerSecondPerRotationPerSecond;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
-import com.ctre.phoenix6.BaseStatusSignal;
-import com.ctre.phoenix6.StatusSignal;
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.AngleUnit;
+import edu.wpi.first.units.AngularVelocityUnit;
+import edu.wpi.first.units.DistanceUnit;
+import edu.wpi.first.units.LinearVelocityUnit;
 import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Per;
 import edu.wpi.first.wpilibj.DigitalInput;
+import frc.robot.util.LoggedTalonFX;
+import frc.robot.util.TalonFXInputsAutoLogged;
 
 
 public class ElevatorIOTalonFX implements ElevatorIO {
@@ -38,24 +44,19 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         public static final double S = 0.0;
 
         public static double UPDATE_FREQUENCY = 50.0;
+
+        private static final double _METERS_PER_ROTATION = 1.0;
+        public static final Per<DistanceUnit, AngleUnit> METERS_PER_ROTATION = MetersPerRotation.ofNative(_METERS_PER_ROTATION);
+        public static final Per<LinearVelocityUnit, AngularVelocityUnit> METERS_PER_SECOND_PER_ROTATIONS_PER_SECOND = MetersPerSecondPerRotationPerSecond.ofNative(_METERS_PER_ROTATION);
     }
 
     private DigitalInput bottomLimitSwitch = new DigitalInput(Constants.BOTTOM_LIMIT_ID);
 
-    private final TalonFX leftMotor = new TalonFX(Constants.LEFT_MOTOR_ID, Constants.CAN_BUS);
-    private final TalonFX rightMotor = new TalonFX(Constants.RIGHT_MOTOR_ID, Constants.CAN_BUS);
+    private final LoggedTalonFX leftMotor = new LoggedTalonFX(Constants.LEFT_MOTOR_ID, Constants.CAN_BUS);
+    private final LoggedTalonFX rightMotor = new LoggedTalonFX(Constants.RIGHT_MOTOR_ID, Constants.CAN_BUS);
 
-    private final StatusSignal<Angle> leftPosition = leftMotor.getPosition();
-    private final StatusSignal<Double> leftError = leftMotor.getClosedLoopError();
-    private final StatusSignal<AngularVelocity> leftVelocity = leftMotor.getVelocity();
-    private final StatusSignal<Voltage> leftVoltage = leftMotor.getMotorVoltage();
-    private final StatusSignal<Current> leftCurrent = leftMotor.getSupplyCurrent();
-
-    private final StatusSignal<Angle> rightPosition = rightMotor.getPosition();
-    private final StatusSignal<Double> rightError = rightMotor.getClosedLoopError();
-    private final StatusSignal<AngularVelocity> rightVelocity = rightMotor.getVelocity();
-    private final StatusSignal<Voltage> rightVoltage  = rightMotor.getMotorVoltage();
-    private final StatusSignal<Current> rightCurrent  = rightMotor.getSupplyCurrent();
+    private final TalonFXInputsAutoLogged leftInputs = new TalonFXInputsAutoLogged();
+    private final TalonFXInputsAutoLogged rightInputs = new TalonFXInputsAutoLogged();
 
     public ElevatorIOTalonFX() {
         TalonFXConfiguration leftConfig = new TalonFXConfiguration();
@@ -80,12 +81,6 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         tryUntilOk(5, () -> leftMotor.getConfigurator().apply(leftConfig, 0.25));
         tryUntilOk(5, () -> rightMotor.getConfigurator().apply(rightConfig, 0.25));
 
-        BaseStatusSignal.setUpdateFrequencyForAll(
-            Constants.UPDATE_FREQUENCY,
-            leftPosition, leftError, leftVelocity, leftVoltage, leftCurrent,
-            rightPosition, rightError, rightVelocity, rightVoltage, rightCurrent
-        );
-
         leftMotor.optimizeBusUtilization();
         rightMotor.optimizeBusUtilization();
 
@@ -94,22 +89,14 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     @Override
     public void updateInputs(ElevatorIOInputs inputs) {
-        BaseStatusSignal.refreshAll(
-            leftPosition, leftVelocity, leftVoltage, leftCurrent,
-            rightPosition, rightVelocity, rightVoltage, rightCurrent
-        );
+        leftMotor.updateInputs(leftInputs);
+        rightMotor.updateInputs(rightInputs);
+    
+        Logger.processInputs("Elevator/leftMotor", leftInputs);
+        Logger.processInputs("Elevator/rightMotor", rightInputs);
 
-        inputs.leftPosition = leftPosition.getValue();
-        inputs.leftError = Rotations.of(leftError.getValue());
-        inputs.leftVelocity = leftVelocity.getValue();
-        inputs.leftVoltage = leftVoltage.getValue();
-        inputs.leftCurrent = leftCurrent.getValue();
-
-        inputs.rightPosition = rightPosition.getValue();
-        inputs.rightError = Rotations.of(rightError.getValue());
-        inputs.rightVelocity = rightVelocity.getValue();
-        inputs.rightVoltage = rightVoltage.getValue();
-        inputs.rightCurrent = rightCurrent.getValue();
+        inputs.height = (Distance) Constants.METERS_PER_ROTATION.timesDivisor(leftInputs.position);
+        inputs.velocity = (LinearVelocity) Constants.METERS_PER_SECOND_PER_ROTATIONS_PER_SECOND.timesDivisor(leftInputs.velocity);
 
         inputs.bottomLimit = bottomLimitSwitch.get();
     }

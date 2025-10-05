@@ -168,7 +168,7 @@ public class Elevator extends SubsystemBase {
     this.maxAcceleration = maxAcceleration;
 
     // Right motor is the leader, so it's the source of truth for current state
-    this.startState = new State(this.inputs.rightPosition.in(Rotations), this.inputs.rightVelocity.in(RotationsPerSecond));
+    // this.startState = new State(this.inputs.rightPosition.in(Rotations), this.inputs.rightVelocity.in(RotationsPerSecond));
 
     // Assume the desired end velocity is zero
     this.targetState = new State(Constants.ElevatorPositionToRotations.get(position).in(Rotations), 0.0);
@@ -180,7 +180,9 @@ public class Elevator extends SubsystemBase {
    * @return True if the position and velocity are both within the Constant-specified tolerance.
    */
   public boolean isAtGoal() {
-    return this.inputs.rightPosition.minus(Rotations.of(this.targetState.position)).magnitude() < Constants.POSITION_TOLERANCE.magnitude() &&
-           this.inputs.rightVelocity.minus(RotationsPerSecond.of(this.targetState.velocity)).magnitude() < Constants.VELOCITY_TOLERANCE.magnitude();
+    // return this.inputs.rightPosition.minus(Rotations.of(this.targetState.position)).magnitude() < Constants.POSITION_TOLERANCE.magnitude() &&
+    //        this.inputs.rightVelocity.minus(RotationsPerSecond.of(this.targetState.velocity)).magnitude() < Constants.VELOCITY_TOLERANCE.magnitude();
+
+    return true;
   }
 }
