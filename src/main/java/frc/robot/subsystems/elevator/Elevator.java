@@ -180,9 +180,11 @@ public class Elevator extends SubsystemBase {
    * @return True if the position and velocity are both within the Constant-specified tolerance.
    */
   public boolean isAtGoal() {
-    // return this.inputs.rightPosition.minus(Rotations.of(this.targetState.position)).magnitude() < Constants.POSITION_TOLERANCE.magnitude() &&
-    //        this.inputs.rightVelocity.minus(RotationsPerSecond.of(this.targetState.velocity)).magnitude() < Constants.VELOCITY_TOLERANCE.magnitude();
+    return this.inputs.leftInputs.position.isNear(Rotations.of(this.targetState.position), Constants.POSITION_TOLERANCE) &&
+           this.inputs.leftInputs.velocity.isNear(RotationsPerSecond.of(this.targetState.velocity), Constants.VELOCITY_TOLERANCE);
+  }
 
-    return true;
+  public void resetOnInit() {
+    this.setElevatorGoal(Constants.ElevatorPosition.CORAL_STOW, Constants.MAX_VELOCITY, Constants.MAX_ACCELERATION);
   }
 }

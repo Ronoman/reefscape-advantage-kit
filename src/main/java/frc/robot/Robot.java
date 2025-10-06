@@ -12,7 +12,10 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 
+import frc.robot.subsystems.elevator.Elevator.Constants.ElevatorPosition;
+import frc.robot.commands.elevator.MoveElevatorToSetpoint;
 
 public class Robot extends LoggedRobot {
   private final RobotContainer container;
@@ -41,7 +44,9 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void autonomousInit() {}
+  public void autonomousInit() {
+    resetSubsystemsOnInit();
+  }
 
   /** This function is called periodically during autonomous. */
   @Override
@@ -49,7 +54,9 @@ public class Robot extends LoggedRobot {
 
   /** This function is called once when teleop is enabled. */
   @Override
-  public void teleopInit() {}
+  public void teleopInit() {
+    resetSubsystemsOnInit();
+  }
 
   /** This function is called periodically during operator control. */
   @Override
@@ -78,4 +85,8 @@ public class Robot extends LoggedRobot {
   /** This function is called periodically whilst in simulation. */
   @Override
   public void simulationPeriodic() {}
+
+  public void resetSubsystemsOnInit() {
+    this.container.elevator.resetOnInit();
+  }
 }

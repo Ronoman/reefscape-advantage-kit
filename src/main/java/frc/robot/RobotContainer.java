@@ -26,7 +26,7 @@ public class RobotContainer {
         public static final int L3_ID = 3;
         public static final int L4_ID = 4;
     }
-    private final Elevator elevator;
+    public final Elevator elevator;
     private final Joystick oiButtons = new Joystick(Constants.OI_BUTTONS_ID);
 
     public RobotContainer(Constants.Mode mode) {
