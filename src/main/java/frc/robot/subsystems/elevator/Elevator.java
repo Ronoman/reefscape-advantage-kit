@@ -35,10 +35,6 @@ import java.util.Map;
 public class Elevator extends SubsystemBase {
   public static class Constants {
     // Actual parameters from the 2025 codebase.
-    // public static final AngularVelocity MAX_VELOCITY = RotationsPerSecond.of(60.0);
-    // public static final AngularAcceleration MAX_ACCELERATION = RotationsPerSecondPerSecond.of(115.0);
-
-    // The "Tim is afraid I'm going to break the robot with untested code" parameters.
     public static final AngularVelocity MAX_VELOCITY = RotationsPerSecond.of(60.0);
     public static final AngularAcceleration MAX_ACCELERATION = RotationsPerSecondPerSecond.of(115.0);
 
@@ -54,7 +50,7 @@ public class Elevator extends SubsystemBase {
       ALGAE_L2,
       ALGAE_L3,
       ALGAE_BARGE,
-  
+
       CORAL_GROUND,
       CORAL_STOW,
       CORAL_L1,
@@ -62,7 +58,7 @@ public class Elevator extends SubsystemBase {
       CORAL_L3,
       CORAL_L4,
     }
-  
+
     // Mappings for named positions to the number of motor rotations needed to get there, measured from the bottom
     // resting position. These were found empirically during testing, and tweaked during competitions.
     public static final EnumMap<ElevatorPosition, Angle> ElevatorPositionToRotations = new EnumMap<>(
@@ -138,11 +134,10 @@ public class Elevator extends SubsystemBase {
     this.io.setDesiredState(new PositionVoltage(desiredState.position).withVelocity(desiredState.velocity));
 
     // Record various parameters that we care about in addition to auto logged inputs.
-    Logger.recordOutput("Elevator/profile/maxVelocity", this.maxVelocity);
-    Logger.recordOutput("Elevator/profile/maxAcceleration", this.maxAcceleration);
     Logger.recordOutput("Elevator/profile/position", Rotations.of(desiredState.position));
     Logger.recordOutput("Elevator/profile/velocity", RotationsPerSecond.of(desiredState.velocity));
     Logger.recordOutput("Elevator/profile/timeSinceLastGoalSet", this.timeSinceLastGoalSet.get());
+    Logger.recordOutput("Elevator/isAtGoal", this.isAtGoal());
   }
 
   /**

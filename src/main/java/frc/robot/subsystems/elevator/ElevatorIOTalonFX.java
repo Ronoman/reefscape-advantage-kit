@@ -5,8 +5,6 @@ import static frc.robot.util.CustomUnits.MetersPerRotation;
 import static frc.robot.util.CustomUnits.MetersPerSecondPerRotationPerSecond;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
-import org.littletonrobotics.junction.Logger;
-
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.Follower;
