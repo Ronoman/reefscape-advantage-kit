@@ -36,6 +36,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
      * Various hardware constants and conversion factors for the real robot's Elevator.
      */
     public static class Constants {
+
         // All Elevator CAN devices are connected to the Rio, not one of the CANivores.
         public static String CAN_BUS = "rio";
 
@@ -147,6 +148,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
      */
     @Override
     public void setDesiredState(PositionVoltage desiredState) {
+        // Commented out during commissioning
         rightMotor.setControl(desiredState.withEnableFOC(true));
     }
 }

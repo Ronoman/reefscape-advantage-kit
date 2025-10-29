@@ -21,7 +21,7 @@ public class Robot extends LoggedRobot {
   private final RobotContainer container;
 
   public Robot() {
-    Logger.recordMetadata("ProjectName", "MyProject"); // Set a metadata value
+    Logger.recordMetadata("ProjectName", "AdvantagedElevator"); // Set a metadata value
 
     if (isReal()) {
         Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
@@ -36,6 +36,8 @@ public class Robot extends LoggedRobot {
 
         this.container = new RobotContainer(RobotContainer.Constants.Mode.SIM);
     }
+
+    Logger.start();
   }
 
   @Override

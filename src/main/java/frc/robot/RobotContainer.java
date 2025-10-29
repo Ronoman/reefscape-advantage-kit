@@ -20,11 +20,11 @@ public class RobotContainer {
         public static final int LEFT_JOYSTICK_ID = 1;
         public static final int RIGHT_JOYSTICK_ID = 2;
 
-        public static final int GROUND_ID = 0;
-        public static final int L1_ID = 1;
-        public static final int L2_ID = 2;
-        public static final int L3_ID = 3;
-        public static final int L4_ID = 4;
+        public static final int GROUND_ID = 1;
+        public static final int L1_ID = 2;
+        public static final int L2_ID = 3;
+        public static final int L3_ID = 4;
+        public static final int L4_ID = 5;
     }
     public final Elevator elevator;
     private final Joystick oiButtons = new Joystick(Constants.OI_BUTTONS_ID);

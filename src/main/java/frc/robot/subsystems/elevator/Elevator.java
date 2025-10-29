@@ -39,7 +39,7 @@ public class Elevator extends SubsystemBase {
     // public static final AngularAcceleration MAX_ACCELERATION = RotationsPerSecondPerSecond.of(115.0);
 
     // The "Tim is afraid I'm going to break the robot with untested code" parameters.
-    public static final AngularVelocity MAX_VELOCITY = RotationsPerSecond.of(10.0);
+    public static final AngularVelocity MAX_VELOCITY = RotationsPerSecond.of(60.0);
     public static final AngularAcceleration MAX_ACCELERATION = RotationsPerSecondPerSecond.of(115.0);
 
     // Position and velocity tolernaces, used by isAtGoal.
@@ -140,8 +140,9 @@ public class Elevator extends SubsystemBase {
     // Record various parameters that we care about in addition to auto logged inputs.
     Logger.recordOutput("Elevator/profile/maxVelocity", this.maxVelocity);
     Logger.recordOutput("Elevator/profile/maxAcceleration", this.maxAcceleration);
-    Logger.recordOutput("Elevator/desiredState/position", Rotations.of(desiredState.position));
-    Logger.recordOutput("Elevator/desiredState/velocity", RotationsPerSecond.of(desiredState.velocity));
+    Logger.recordOutput("Elevator/profile/position", Rotations.of(desiredState.position));
+    Logger.recordOutput("Elevator/profile/velocity", RotationsPerSecond.of(desiredState.velocity));
+    Logger.recordOutput("Elevator/profile/timeSinceLastGoalSet", this.timeSinceLastGoalSet.get());
   }
 
   /**
@@ -159,6 +160,7 @@ public class Elevator extends SubsystemBase {
     AngularVelocity maxVelocity,
     AngularAcceleration maxAcceleration
   ) {
+    System.out.println("Setting new goal (position: " + Constants.ElevatorPositionToRotations.get(position).in(Rotations) + ")");
     this.profile = new TrapezoidProfile(
       new Constraints(maxVelocity.in(RotationsPerSecond), maxAcceleration.in(RotationsPerSecondPerSecond))
     );
@@ -168,11 +170,12 @@ public class Elevator extends SubsystemBase {
     this.maxAcceleration = maxAcceleration;
 
     // Right motor is the leader, so it's the source of truth for current state
-    // this.startState = new State(this.inputs.rightPosition.in(Rotations), this.inputs.rightVelocity.in(RotationsPerSecond));
+    this.startState = new State(this.inputs.rightInputs.position.in(Rotations), this.inputs.rightInputs.velocity.in(RotationsPerSecond));
 
     // Assume the desired end velocity is zero
     this.targetState = new State(Constants.ElevatorPositionToRotations.get(position).in(Rotations), 0.0);
     this.timeSinceLastGoalSet.reset();
+    this.timeSinceLastGoalSet.start();
   }
 
   /**
@@ -180,8 +183,8 @@ public class Elevator extends SubsystemBase {
    * @return True if the position and velocity are both within the Constant-specified tolerance.
    */
   public boolean isAtGoal() {
-    return this.inputs.leftInputs.position.isNear(Rotations.of(this.targetState.position), Constants.POSITION_TOLERANCE) &&
-           this.inputs.leftInputs.velocity.isNear(RotationsPerSecond.of(this.targetState.velocity), Constants.VELOCITY_TOLERANCE);
+    return this.inputs.rightInputs.position.isNear(Rotations.of(this.targetState.position), Constants.POSITION_TOLERANCE) &&
+           this.inputs.rightInputs.velocity.isNear(RotationsPerSecond.of(this.targetState.velocity), Constants.VELOCITY_TOLERANCE);
   }
 
   public void resetOnInit() {
